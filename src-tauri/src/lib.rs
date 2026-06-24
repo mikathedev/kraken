@@ -1,22 +1,21 @@
 
-fn get_show_data() {
-    let json = "";
-    let data: serde_json::Value = serde_json::from_str(json).unwrap();
-    
-    let shows: Vec<String> = data["shows"].as_array().unwrap().iter().map(|s| s.as_str().unwrap().to_string()).collect();
-    println!("{:?}", shows);
-}
+mod download;
+mod scrape;
+mod tools;
 
 #[tauri::command]
-fn get_shows() -> Vec<String> {
+async fn get_shows() -> Vec<String> {
+    let _ = scrape::scrape("show_name".to_string(), "https://a.111477.xyz/tvs/A%20Haunting/".to_string()).await;
+    let data = tools::get_show_data();
     let mut shows: Vec<String> = Vec::new();
-    
+    for (show, _) in data {
+        shows.push(show);
+    }
     shows
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    get_show_data();
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![get_shows])

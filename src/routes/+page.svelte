@@ -1,31 +1,43 @@
-<script>
-  // Sample data simulating a Steam library
-  let shows = [
-    { id: 1, title: "Cyberpunk 2077", cover: "https://via.placeholder.com/300x450/111/fff?text=Cyberpunk" },
-    { id: 2, title: "Elden Ring", cover: "https://via.placeholder.com/300x450/222/fff?text=Elden+Ring" },
-    { id: 3, title: "Hades II", cover: "https://via.placeholder.com/300x450/333/fff?text=Hades+II" },
-    { id: 4, title: "Witcher 3", cover: "https://via.placeholder.com/300x450/444/fff?text=Witcher+3" },
-    { id: 5, title: "Balatro", cover: "https://via.placeholder.com/300x450/555/fff?text=Balatro" },
-    { id: 6, title: "Stardew Valley", cover: "https://via.placeholder.com/300x450/666/fff?text=Stardew" },
-  ];
+<script lang="ts">
+  import { invoke } from "@tauri-apps/api/core";
+  import { onMount } from "svelte";
+  let selectedShow: string | null = null;
+  
+  let shows: string[] = [];
+  
+  async function getShows() {
+    const result = await invoke("get_shows");
+    shows = result as string[];
+  }
+  onMount(getShows);
 </script>
-
+{#if !selectedShow}
 <div class="library-container">
   <h2>All Shows ({shows.length})</h2>
   
   <div class="show-grid">
-    {#each shows as show (show.id)}
-      <div class="show-card">
+    {#each shows as show (show)}
+      <div 
+        role="button" 
+        tabindex="0"
+        class="show-card" 
+        on:click={() => selectedShow = show}
+        on:keydown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            selectedShow = show;
+            e.preventDefault();
+          }
+        }}
+      >
         <div class="cover-wrapper">
           <div class="overlay">
-            <h1 class="show-title">{show.title}</h1>
+            <h1 class="show-title">{show}</h1>
           </div>
         </div>
       </div>
     {/each}
   </div>
 </div>
-
 <style>
   :global(body) {
     background-color: transparent;
@@ -37,7 +49,7 @@
 
   .library-container {
     max-width: 1400px;
-    margin: 0 auto;
+    margin: 10px auto;
   }
 
   h2 {
@@ -112,3 +124,30 @@
   }
 }
 </style>
+
+{/if}
+{#if selectedShow}
+	<button on:click={() => selectedShow = null}>
+		Close
+	</button>
+	<style>
+  :global(body) {
+    background-color: transparent;
+    color: #c7d5e0;
+    font-family: "Motiva Sans", Sans-Serif, Arial;
+    margin: 0;
+    padding: 20px;
+  }
+
+
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color: #f6f6f6;
+    background-color: #2f2f2f;
+  }
+}
+</style>
+
+{/if}
+
